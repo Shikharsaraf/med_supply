@@ -1,7 +1,6 @@
 package com.medsupply.service;
 
 import com.medsupply.dto.ConsumptionDTO;
-import com.medsupply.dto.ConsumptionRecordRequest;
 import com.medsupply.model.ConsumptionRecord;
 import com.medsupply.model.Facility;
 import com.medsupply.model.Medicine;
@@ -32,29 +31,27 @@ public class ConsumptionService {
     }
 
     @Transactional
-    public ConsumptionRecord logConsumption(Long facilityId, Long medicineId, Integer quantity, LocalDate date) {
-        Facility facility = facilityRepository.findById(facilityId)
+    public ConsumptionDTO recordConsumption(ConsumptionDTO dto) {
+        Facility facility = facilityRepository.findById(dto.getFacilityId())
                 .orElseThrow(() -> new IllegalArgumentException("Facility not found"));
-        Medicine medicine = medicineRepository.findById(medicineId)
+        Medicine medicine = medicineRepository.findById(dto.getMedicineId())
                 .orElseThrow(() -> new IllegalArgumentException("Medicine not found"));
 
         ConsumptionRecord record = new ConsumptionRecord();
         record.setFacility(facility);
         record.setMedicine(medicine);
-        record.setQuantityConsumed(quantity);
-        record.setConsumptionDate(date != null ? date : LocalDate.now());
+        record.setQuantityConsumed(dto.getQuantityConsumed());
+        record.setConsumptionDate(dto.getConsumptionDate() != null ? dto.getConsumptionDate() : LocalDate.now());
 
-        return consumptionRepository.save(record);
-    }
+        ConsumptionRecord saved = consumptionRepository.save(record);
 
-    @Transactional
-    public ConsumptionRecord recordConsumption(ConsumptionDTO dto) {
-        return logConsumption(
-                dto.getFacilityId(),
-                dto.getMedicineId(),
-                dto.getQuantityConsumed(),
-                dto.getConsumptionDate()
-        );
+        ConsumptionDTO response = new ConsumptionDTO();
+        response.setId(saved.getId());
+        response.setFacilityId(saved.getFacility().getId());
+        response.setMedicineId(saved.getMedicine().getId());
+        response.setQuantityConsumed(saved.getQuantityConsumed());
+        response.setConsumptionDate(saved.getConsumptionDate());
+        return response;
     }
 
     public double calculateAverageDailyConsumption(Long facilityId, Long medicineId, int days) {
