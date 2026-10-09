@@ -1,0 +1,5 @@
+target/
+.DS_Store
+.vscode/
+med-supply-web/node_modules/
+med-supply-web/.next/
